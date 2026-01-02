@@ -212,12 +212,10 @@ def color_status(code):
         return Fore.YELLOW + str(code)
     return Fore.RED + str(code)
 
-def print_result(domain, cname, service, status, takeover, filter_status, filter_cname):
-    # Filter by HTTP status
+def print_result(domain, cname, service, status, takeover, filter_status, filter_cnames):
     if filter_status and status != filter_status:
         return
-    # Filter by CNAME keyword
-    if filter_cname and (cname is None or filter_cname.lower() not in cname.lower()):
+    if filter_cnames and cname not in filter_cnames:
         return
 
     if cname is None:
@@ -258,16 +256,14 @@ def main():
     parser.add_argument("-t", "--threads", type=int, default=10)
     parser.add_argument("-o", "--output", help="Output prefix")
     parser.add_argument("--status", type=int, help="Filter by HTTP status")
-    parser.add_argument("--cname-filter", help="Only show domains pointing to this CNAME keyword (e.g., netlify)")
+    parser.add_argument("--filter-cname", nargs="*", help="Filter by one or more CNAMEs (space separated)")
 
     args = parser.parse_args()
     banner()
 
     domains = []
-
     if args.domain:
         domains.append(args.domain.strip())
-
     if args.file:
         try:
             with open(args.file) as f:
@@ -288,7 +284,7 @@ def main():
         for future in as_completed(futures):
             r = future.result()
             results.append(r)
-            print_result(*r, args.status, args.cname_filter)
+            print_result(*r, args.status, args.filter_cname)
 
     except KeyboardInterrupt:
         print(Fore.YELLOW + "\n[!] Interrupted by user (Ctrl+C)")
