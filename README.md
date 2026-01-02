@@ -42,15 +42,7 @@ Install dependencies:
 pip3 install -r requirements.txt
 
 
-Requirements:
-
-Python 3.10+
-
-requests
-
-colorama
-
-📜 Usage
+Requirements:  Python 3.10+
 
 ✅ Usage
 
@@ -77,12 +69,6 @@ python3 cnamercon_pro.py -f subdomains.txt -o output/results
 Multi-threading:
 python3 cnamercon_pro.py -f subdomains.txt -t 20
 
-🖌️ Output Example
-[+] test.example.com                     → test.netlifyglobalcdn.com          | Netlify      | HTTP 404 | LIKELY TAKEOVER CONFIRMED
-[+] app.example.com                      → app.github.io                      | GitHub Pages | HTTP 200 | POSSIBLE
-[-] old.example.com                      → No CNAME
-
-
 Red = Likely takeover
 
 Green = Safe or possible
@@ -101,6 +87,7 @@ Azure	azurewebsites.net
 Heroku	herokuapp.com
 Fastly	fastly.net
 Google Cloud	storage.googleapis.com
+
 🚀 Advanced Features
 
 Ctrl+C clean termination
