@@ -9,59 +9,147 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from colorama import Fore, Style, init
 
-# Init
+# ---------------- INIT ---------------- #
 init(autoreset=True)
 requests.packages.urllib3.disable_warnings()
 
-# ---------------- CONFIG ---------------- #
-
+# ---------------- TAKEOVER DATABASE ---------------- #
 FINGERPRINTS = {
-    "AWS": ["amazonaws.com", "cloudfront.net"],
-    "Netlify": ["netlify.app", "netlify.com", "netlifyglobalcdn.com"],
+    "Aftership": ["aftership.com"],
+    "AgileCRM": ["agilecrm.com"],
+    "Aha": ["aha.io"],
+    "Airee": ["airee.ru"],
+    "Anima": ["animaapp.io"],
+    "AnnounceKit": ["announcekit.app"],
+    "AWS S3": ["s3.amazonaws.com", "amazonaws.com", "cloudfront.net"],
+    "BigCartel": ["bigcartel.com"],
+    "Bitbucket": ["bitbucket.io"],
+    "CampaignMonitor": ["campaignmonitor.com"],
+    "Canny": ["canny.io"],
+    "Cargo": ["cargocollective.com"],
+    "Clever": ["clever-cloud.com"],
+    "Flexbe": ["flexbe.io"],
+    "Framer": ["framerusercontent.com"],
+    "Frontify": ["frontify.com"],
+    "Gemfury": ["gemfury.com"],
+    "GetResponse": ["getresponse.com"],
+    "Ghost": ["ghost.io"],
+    "GitBook": ["gitbook.io"],
     "GitHub Pages": ["github.io"],
-    "Azure": ["azurewebsites.net"],
-    "Fastly": ["fastly.net"],
-    "Heroku": ["herokuapp.com"],
-    "Google Cloud": ["storage.googleapis.com"]
+    "GoHire": ["gohire.io"],
+    "GreatPages": ["greatpages.io"],
+    "HatenaBlog": ["hatenablog.com"],
+    "HelpDocs": ["helpdocs.io"],
+    "HelpJuice": ["helpjuice.com"],
+    "Helprace": ["helprace.com"],
+    "HelpScout": ["helpscoutdocs.com"],
+    "HubSpot": ["hubspot.com"],
+    "Intercom": ["intercom.help"],
+    "JazzHR": ["jazzhr.com"],
+    "JetBrains": ["youtrack.cloud"],
+    "Kinsta": ["kinsta.com"],
+    "LaunchRock": ["launchrock.com"],
+    "Leadpages": ["leadpages.com"],
+    "Mashery": ["mashery.com"],
+    "Meteor": ["meteor.com"],
+    "Netlify": ["netlify.app", "netlify.com", "netlifyglobalcdn.com"],
+    "Ngrok": ["ngrok.io"],
+    "Pagewiz": ["pagewiz.com"],
+    "Pantheon": ["pantheon.io"],
+    "Pingdom": ["pingdom.com"],
+    "Proposify": ["proposify.com"],
+    "ReadMe": ["readme.io"],
+    "ReadTheDocs": ["readthedocs.io"],
+    "RedirectPizza": ["redirect.pizza"],
+    "Shopify": ["myshopify.com"],
+    "Short.io": ["short.io"],
+    "SimpleBooklet": ["simplebooklet.com"],
+    "SmartJobBoard": ["smartjobboard.com"],
+    "SmugMug": ["smugmug.com"],
+    "Softr": ["softr.io"],
+    "Sprintful": ["sprintful.com"],
+    "Squadcast": ["squadcast.com"],
+    "Strikingly": ["strikinglydns.com"],
+    "Surge": ["surge.sh"],
+    "SurveyGizmo": ["surveygizmo.com"],
+    "SurveySparrow": ["surveysparrow.com"],
+    "Tave": ["tave.com"],
+    "Teamwork": ["teamwork.com"],
+    "Tilda": ["tilda.cc"],
+    "Uberflip": ["uberflip.com"],
+    "Uptime": ["uptime.com"],
+    "UptimeRobot": ["uptimerobot.com"],
+    "UserVoice": ["uservoice.com"],
+    "Vend": ["vendhq.com"],
+    "Wasabi": ["wasabisys.com"],
+    "Wishpond": ["wishpond.com"],
+    "Wix": ["wixsite.com"],
+    "WordPress": ["wordpress.com"],
+    "Worksites": ["worksites.net"],
+    "Wufoo": ["wufoo.com"],
+    "Zendesk": ["zendesk.com"]
 }
 
 ERROR_SIGNATURES = {
     "Netlify": ["not found", "no such site", "site not found"],
     "GitHub Pages": ["there isn't a github pages site here", "repository not found"],
-    "Azure": ["web site not found", "resource you are looking for has been removed"],
-    "Heroku": ["no such app", "there's nothing here"],
-    "Fastly": ["fastly error: unknown domain"],
-    "AWS": ["the request could not be satisfied", "bad request"]
+    "AWS S3": ["the request could not be satisfied", "bad request", "no such bucket"],
+    "Airee": ["ошибка 402"],
+    "Anima": ["the page you were looking for does not exist"],
+    "Bitbucket": ["repository not found"],
+    "CampaignMonitor": ["trying to access your account"],
+    "Canny": ["company not found", "no such company"],
+    "Cargo": ["404 not found"],
+    "Frontify": ["404 - page not found"],
+    "Gemfury": ["404: this page could not be found"],
+    "GetResponse": ["lead generation has never been easier"],
+    "Ghost": ["site unavailable", "failed to resolve dns path"],
+    "HatenaBlog": ["404 blog is not found"],
+    "HelpJuice": ["could not find what you're looking for"],
+    "Helprace": ["http_status=301"],
+    "Ngrok": ["tunnel .* not found"],
+    "Pantheon": ["404 error unknown site!"],
+    "Pingdom": ["couldn't find the status page"],
+    "ReadMe": ["still working on making everything perfect"],
+    "ReadTheDocs": ["the link you have followed or the url that you entered does not exist"],
+    "Shopify": ["sorry, this shop is currently unavailable"],
+    "Short.io": ["link does not exist"],
+    "SmartJobBoard": ["job board website is either expired or its domain name is invalid"],
+    "Strikingly": ["page not found"],
+    "Surge": ["project not found"],
+    "SurveySparrow": ["account not found"],
+    "Tilda": ["please renew your subscription"],
+    "Uberflip": ["the url you've accessed does not provide a hub"],
+    "UptimeRobot": ["page not found"],
+    "WordPress": ["do you want to register .*?\\.wordpress\\.com"],
+    "Worksites": ["hello! sorry, but the website you’re looking for doesn’t exist"]
 }
 
-# ---------------- COLORFUL HELP ---------------- #
-
+# ---------------- UI ---------------- #
 class ColorHelpFormatter(argparse.RawTextHelpFormatter):
     def start_section(self, heading):
         heading = f"{Fore.CYAN}{heading}{Style.RESET_ALL}"
         super().start_section(heading)
 
-# ---------------- UI ---------------- #
-
 def banner():
-    print(Fore.CYAN + """
+    print(Fore.CYAN + r"""
    ____ _   _    _    __  __ _____ ____  _____ ____  ___  _   _
-  / ___| \\ | |  / \\  |  \\/  | ____|  _ \\| ____/ ___|/ _ \\| \\ | |
- | |   |  \\| | / _ \\ | |\\/| |  _| | |_) |  _|| |   | | | |  \\| |
- | |___| |\\  |/ ___ \\| |  | | |___|  _ <| |__| |___| |_| | |\\  |
-  \\____|_| \\_/_/   \\_\\_|  |_|_____|_| \\_\\_____\\____|\\___/|_| \\_|
-         CNAMERecon Pro – Subdomain Takeover Recon By Shahwar shah
-    """ + Style.RESET_ALL)
+  / ___| \ | |  / \  |  \/  | ____|  _ \| ____/ ___|/ _ \| \ | |
+ | |   |  \| | / _ \ | |\/| |  _| | |_) |  _|| |   | | | |  \| |
+ | |___| |\  |/ ___ \| |  | | |___|  _ <| |__| |___| |_| | |\  |
+  \____|_| \_/_/   \_\_|  |_|_____|_| \_\_____\____|\___/|_| \_|
+
+        CNAMERecon Pro – Subdomain Takeover Recon
+                     by Shahwar Shah
+""" + Style.RESET_ALL)
 
 # ---------------- CORE ---------------- #
-
 def detect_service(cname):
     for service, patterns in FINGERPRINTS.items():
         for p in patterns:
             if p in cname:
                 return service
     return "Unknown"
-
 
 def fetch_http(domain):
     for scheme in ["https://", "http://"]:
@@ -74,18 +162,15 @@ def fetch_http(domain):
                 headers={"User-Agent": "CNAMERecon-Pro"}
             )
             return r.status_code, r.text.lower()
-        except Exception:
+        except requests.RequestException:
             continue
     return None, ""
 
-
 def check_error_signature(service, body):
-    if service in ERROR_SIGNATURES:
-        for sig in ERROR_SIGNATURES[service]:
-            if sig in body:
-                return True
+    for sig in ERROR_SIGNATURES.get(service, []):
+        if sig in body:
+            return True
     return False
-
 
 def resolve_domain(domain):
     try:
@@ -93,28 +178,29 @@ def resolve_domain(domain):
         for rdata in answers:
             cname = str(rdata.target).rstrip(".")
             service = detect_service(cname)
+            status, body = fetch_http(domain)
 
-            status_code, body = fetch_http(domain)
-
-            if service != "Unknown":
-                vulnerable = check_error_signature(service, body)
-                takeover = "LIKELY" if vulnerable else "POSSIBLE"
+            if status is None:
+                takeover = "UNREACHABLE"
+            elif status in [401, 403]:
+                takeover = "NO"
+            elif check_error_signature(service, body):
+                takeover = "LIKELY"
             else:
                 takeover = "NO"
 
-            return domain, cname, service, status_code, takeover
+            return domain, cname, service, status, takeover
 
     except dns.resolver.NoAnswer:
         return domain, None, None, None, "NO"
     except dns.resolver.NXDOMAIN:
         return domain, "NXDOMAIN", None, None, "NO"
     except dns.exception.Timeout:
-        return domain, "TIMEOUT", None, None, "NO"
+        return domain, "TIMEOUT", None, None, "UNREACHABLE"
     except Exception:
-        return domain, "ERROR", None, None, "NO"
+        return domain, "ERROR", None, None, "UNREACHABLE"
 
 # ---------------- OUTPUT ---------------- #
-
 def color_status(code):
     if code is None:
         return Fore.WHITE + "N/A"
@@ -126,46 +212,53 @@ def color_status(code):
         return Fore.YELLOW + str(code)
     return Fore.RED + str(code)
 
-
-def print_result(domain, cname, service, status_code, takeover, filter_status):
-    if filter_status and status_code != filter_status:
+def print_result(domain, cname, service, status, takeover, filter_status, filter_cname):
+    if filter_status and status != filter_status:
+        return
+    if filter_cname and (cname is None or filter_cname not in cname):
         return
 
     if cname is None:
         print(f"{Fore.YELLOW}[-] {domain:<35} → No CNAME")
-    elif cname in ["NXDOMAIN", "TIMEOUT", "ERROR"]:
+        return
+
+    if cname in ["NXDOMAIN", "TIMEOUT", "ERROR"]:
         print(f"{Fore.RED}[!] {domain:<35} → {cname}")
-    else:
-        sev_color = Fore.RED if takeover == "LIKELY" else Fore.GREEN
-        flag = f"{Fore.RED} TAKEOVER CONFIRMED" if takeover == "LIKELY" else ""
-        print(
-            f"{sev_color}[+] {domain:<35} → "
-            f"{Fore.CYAN}{cname:<40} "
-            f"| {service:<12} "
-            f"| HTTP {color_status(status_code)} "
-            f"| {takeover}{flag}"
-        )
+        return
+
+    sev = Fore.GREEN
+    label = takeover
+
+    if takeover == "LIKELY":
+        sev = Fore.RED
+        label += " TAKEOVER"
+    elif takeover == "UNREACHABLE":
+        sev = Fore.WHITE
+    elif status in [401, 403]:
+        label += " PROTECTED"
+
+    print(
+        f"{sev}[+] {domain:<35} → "
+        f"{Fore.CYAN}{cname:<45} | "
+        f"{service:<12} | "
+        f"HTTP {color_status(status)} | {label}"
+    )
 
 # ---------------- MAIN ---------------- #
-
 def main():
     parser = argparse.ArgumentParser(
-        description="CNAMERecon Pro – Advanced CNAME Takeover Scanner",
+        description="CNAMERecon Pro – Advanced Subdomain Takeover Scanner",
         formatter_class=ColorHelpFormatter
     )
 
-    parser.add_argument("-d", "--domain", help="Scan a single domain")
-    parser.add_argument("-f", "--file", help="File containing subdomains")
-    parser.add_argument("-t", "--threads", type=int, default=10, help="Number of threads (default: 10)")
-    parser.add_argument("-o", "--output", help="Output file prefix (json/csv)")
-    parser.add_argument(
-        "--status",
-        type=int,
-        help="Show only results matching HTTP status code (e.g. 404)"
-    )
+    parser.add_argument("-d", "--domain", help="Single domain")
+    parser.add_argument("-f", "--file", help="File with subdomains")
+    parser.add_argument("-t", "--threads", type=int, default=10)
+    parser.add_argument("-o", "--output", help="Output prefix")
+    parser.add_argument("--status", type=int, help="Filter by HTTP status")
+    parser.add_argument("--cname-filter", help="Only show domains pointing to this CNAME")
 
     args = parser.parse_args()
-
     banner()
 
     domains = []
@@ -175,10 +268,10 @@ def main():
 
     if args.file:
         try:
-            with open(args.file, "r") as f:
-                domains.extend([line.strip() for line in f if line.strip()])
+            with open(args.file) as f:
+                domains.extend(line.strip() for line in f if line.strip())
         except FileNotFoundError:
-            print(Fore.RED + "[!] Subdomain file not found")
+            print(Fore.RED + "[!] File not found")
             return
 
     if not domains:
@@ -191,17 +284,16 @@ def main():
     try:
         futures = [executor.submit(resolve_domain, d) for d in domains]
         for future in as_completed(futures):
-            result = future.result()
-            results.append(result)
-            print_result(*result, args.status)
+            r = future.result()
+            results.append(r)
+            print_result(*r, args.status, args.cname_filter)
 
     except KeyboardInterrupt:
-        print(Fore.YELLOW + "\n[!] Scan interrupted by user (Ctrl+C). Exiting cleanly.")
+        print(Fore.YELLOW + "\n[!] Interrupted by user (Ctrl+C)")
         executor.shutdown(wait=False, cancel_futures=True)
         sys.exit(0)
 
-    finally:
-        executor.shutdown(wait=True)
+    executor.shutdown(wait=True)
 
     if args.output:
         with open(args.output + ".json", "w") as jf:
@@ -212,7 +304,7 @@ def main():
                         "cname": c,
                         "service": s,
                         "http_status": sc,
-                        "takeover_status": t
+                        "takeover": t
                     }
                     for d, c, s, sc, t in results
                 ],
@@ -222,17 +314,15 @@ def main():
 
         with open(args.output + ".csv", "w", newline="") as cf:
             writer = csv.writer(cf)
-            writer.writerow(["Domain", "CNAME", "Service", "HTTP Status", "Takeover Status"])
-            for row in results:
-                writer.writerow(row)
+            writer.writerow(["Domain", "CNAME", "Service", "HTTP Status", "Takeover"])
+            writer.writerows(results)
 
-        print(Fore.CYAN + f"\n[✓] Results saved to {args.output}.json and {args.output}.csv")
+        print(Fore.CYAN + f"\n[✓] Saved to {args.output}.json and {args.output}.csv")
 
 # ---------------- ENTRY ---------------- #
-
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n[!] Interrupted. Goodbye.")
+        print("\n[!] Exiting cleanly.")
         sys.exit(0)
