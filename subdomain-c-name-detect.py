@@ -6,6 +6,7 @@ import json
 import csv
 import requests
 import sys
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from colorama import Fore, Style, init
 
@@ -109,7 +110,9 @@ FINGERPRINTS = {
         "trafficmanager.net",
         "visualstudio.com",
         "web.core.windows.net"
-    ]
+    ],
+    # ---------------- ELASTIC BEANSTALK ---------------- #
+    "Elastic Beanstalk": [".elasticbeanstalk.com"]
 }
 
 # ---------------- ERROR SIGNATURES ---------------- #
@@ -117,36 +120,7 @@ ERROR_SIGNATURES = {
     "Netlify": ["not found", "no such site", "site not found"],
     "GitHub Pages": ["there isn't a github pages site here", "repository not found"],
     "AWS S3": ["the request could not be satisfied", "bad request", "no such bucket"],
-    "Airee": ["ошибка 402"],
-    "Anima": ["the page you were looking for does not exist"],
-    "Bitbucket": ["repository not found"],
-    "CampaignMonitor": ["trying to access your account"],
-    "Canny": ["company not found", "no such company"],
-    "Cargo": ["404 not found"],
-    "Frontify": ["404 - page not found"],
-    "Gemfury": ["404: this page could not be found"],
-    "GetResponse": ["lead generation has never been easier"],
-    "Ghost": ["site unavailable", "failed to resolve dns path"],
-    "HatenaBlog": ["404 blog is not found"],
-    "HelpJuice": ["could not find what you're looking for"],
-    "Helprace": ["http_status=301"],
-    "Ngrok": ["tunnel .* not found"],
-    "Pantheon": ["404 error unknown site!"],
-    "Pingdom": ["couldn't find the status page"],
-    "ReadMe": ["still working on making everything perfect"],
-    "ReadTheDocs": ["the link you have followed or the url that you entered does not exist"],
-    "Shopify": ["sorry, this shop is currently unavailable"],
-    "Short.io": ["link does not exist"],
-    "SmartJobBoard": ["job board website is either expired or its domain name is invalid"],
-    "Strikingly": ["page not found"],
-    "Surge": ["project not found"],
-    "SurveySparrow": ["account not found"],
-    "Tilda": ["please renew your subscription"],
-    "Uberflip": ["the url you've accessed does not provide a hub"],
-    "UptimeRobot": ["page not found"],
-    "WordPress": ["do you want to register .*?\\.wordpress\\.com"],
-    "Worksites": ["hello! sorry, but the website you’re looking for doesn’t exist"],
-    # ---------------- AZURE ERRORS ---------------- #
+    "Elastic Beanstalk": ["NoSuchBucket", "does not exist", "404"],
     "Microsoft Azure": [
         "the resource you are looking for has been removed",
         "404 web site not found",
@@ -205,6 +179,16 @@ def check_error_signature(service, body):
             return True
     return False
 
+def elasticbeanstalk_hijack(cname):
+    """
+    Detect Elastic Beanstalk hijackable CNAMEs with region specification
+    Format: <prefix>.<region>.elasticbeanstalk.com
+    """
+    pattern = re.compile(
+        r"^[a-z0-9_-]*\.(us|af|ap|ca|eu|me|sa|il)-(north|east|west|south|northeast|southeast|central)-[1-9]+\.elasticbeanstalk\.com$"
+    )
+    return bool(pattern.match(cname))
+
 def resolve_domain(domain):
     try:
         answers = dns.resolver.resolve(domain, "CNAME")
@@ -213,16 +197,20 @@ def resolve_domain(domain):
             service = detect_service(cname)
             status, body = fetch_http(domain)
 
-            if status is None:
-                takeover = "UNREACHABLE"
-            elif status in [401, 403]:
-                takeover = "NO"
-            # ---------------- AZURE SPECIAL HANDLING ---------------- #
-            elif service == "Microsoft Azure" and status in [404, 400] and check_error_signature(service, body):
+            takeover = "NO"
+
+            # Azure takeover detection
+            if service == "Microsoft Azure" and status in [404, 400] and check_error_signature(service, body):
                 takeover = "LIKELY"
+            # Elastic Beanstalk takeover detection
+            elif service == "Elastic Beanstalk" and (elasticbeanstalk_hijack(cname) or check_error_signature(service, body)):
+                takeover = "LIKELY"
+            # Other services
             elif check_error_signature(service, body):
                 takeover = "LIKELY"
-            else:
+            elif status is None:
+                takeover = "UNREACHABLE"
+            elif status in [401, 403]:
                 takeover = "NO"
 
             return domain, cname, service, status, takeover
